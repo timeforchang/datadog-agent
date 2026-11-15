@@ -1691,11 +1691,12 @@ func (s *TracerSuite) TestDNSStatsWithNAT() {
 	cfg := testConfig()
 	skipEbpflessTodo(t, cfg)
 	testutil.IptablesSave(t)
-	// Setup a NAT rule to translate 2.2.2.2 to 8.8.8.8 and issue a DNS request to 2.2.2.2
-	cmds := []string{"iptables -t nat -A OUTPUT -d 2.2.2.2 -j DNAT --to-destination 8.8.8.8"}
+	// Setup a NAT rule to translate 2.2.2.2 to the testdns server and issue a DNS request to 2.2.2.2
+	cmds := []string{"iptables -t nat -A OUTPUT -d 2.2.2.2 -j DNAT --to-destination " + testdns.GetServerIP(t).String()}
 	testutil.RunCommands(t, cmds, false)
 
 	cfg.CollectDNSStats = true
+	cfg.CollectLocalDNS = true
 	cfg.DNSTimeout = 1 * time.Second
 	tr := setupTracer(t, cfg)
 
