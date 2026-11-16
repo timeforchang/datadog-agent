@@ -6,8 +6,8 @@ go_library(
     srcs = [
         "agenttelemetry.go",
         "config.go",
-        "errortracking_owners_gen.go",
         "errortracking_owners.go",
+        "errortracking_owners_gen.go",
         "errortracking_sender.go",
         "errortracking_team.go",
         "logs_payload.go",
