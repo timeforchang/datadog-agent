@@ -55,10 +55,16 @@ type writerOptions struct {
 	lowerEncoderMem bool
 }
 
-// WithWindowSize sets the pure-Go history window in bytes, overriding
-// ZSTD_NOCGO_WINDOW. It must be a power of two between 1 KiB and 512 MiB.
-func WithWindowSize(size int) WriterOption {
-	return func(o *writerOptions) { o.windowSize = size }
+// WithWindowLogSize sets the pure-Go history window to 1 << logSize bytes,
+// overriding ZSTD_NOCGO_WINDOW. Valid values are 10 through 29 (1 KiB to 512 MiB).
+func WithWindowLogSize(logSize int) WriterOption {
+	return func(o *writerOptions) {
+		// Invalid logs become invalid window sizes, rejected by the encoder.
+		o.windowSize = 0
+		if logSize >= 10 && logSize <= 29 {
+			o.windowSize = 1 << logSize
+		}
+	}
 }
 
 // WithLowerEncoderMem controls the pure-Go encoder's memory-saving mode.
