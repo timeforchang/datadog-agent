@@ -12,11 +12,13 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/DataDog/datadog-agent/pkg/privateactionrunner/adapters/modes"
 	"github.com/DataDog/datadog-agent/pkg/privateactionrunner/observability"
 	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/gobwas/glob"
+	"golang.org/x/net/idna"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -144,23 +146,21 @@ func (c *Config) IsURLInAllowlist(urlStr string) bool {
 }
 
 // IsDomainAllowed reports whether hostname matches an exact or glob entry of
-// DomainAllowlist, case-insensitively. A nil DomainAllowlist allows every domain.
+// DomainAllowlist, case-insensitively. Both sides are compared in the ASCII form
+// net/http dials. A nil DomainAllowlist allows every domain.
 func (c *Config) IsDomainAllowed(hostname string) bool {
 	if c.DomainAllowlist == nil {
 		return true
 	}
-	// Require ASCII (including punycode) so Unicode case folding cannot
-	// authorize a different hostname from the one used by the transport.
-	isNonASCII := func(r rune) bool { return r > '\x7f' }
-	if strings.IndexFunc(hostname, isNonASCII) >= 0 {
+	hostname, ok := dialedHostname(hostname)
+	if !ok {
 		return false
 	}
-	hostname = strings.ToLower(hostname)
 	for _, pattern := range c.DomainAllowlist {
-		if strings.IndexFunc(pattern, isNonASCII) >= 0 {
+		pattern, ok := dialedHostname(pattern)
+		if !ok {
 			continue
 		}
-		pattern = strings.ToLower(pattern)
 		if pattern == hostname {
 			return true
 		}
@@ -169,6 +169,23 @@ func (c *Config) IsDomainAllowed(hostname string) bool {
 		}
 	}
 	return false
+}
+
+// dialedHostname returns hostname as net/http dials it, lowercased: ASCII names
+// unchanged, other names mapped with IDNA lookup rules. Matching the raw name
+// instead lets case folding equate names that resolve to different hosts.
+func dialedHostname(hostname string) (string, bool) {
+	for _, r := range hostname {
+		if r > unicode.MaxASCII {
+			ascii, err := idna.Lookup.ToASCII(hostname)
+			if err != nil {
+				return "", false
+			}
+			hostname = ascii
+			break
+		}
+	}
+	return strings.ToLower(hostname), true
 }
 
 func (c *Config) IdentityIsIncomplete() bool {
