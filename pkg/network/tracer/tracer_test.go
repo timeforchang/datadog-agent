@@ -1078,7 +1078,10 @@ func testDNSStats(t *testing.T, tr *Tracer, domain string, success, failure, tim
 		failedResponses := total - successfulResponses
 
 		// DNS Stats
-		require.Equal(c, uint32(success), successfulResponses, "expected %d successful responses but got %d", success, successfulResponses)
+		dnsKey, _ := network.DNSKey(conn, tr.config.DNSMonitoringPortList)
+		require.Equal(c, uint32(success), successfulResponses,
+			"expected %d successful responses but got %d (translation: %+v, DNS key: %+v)",
+			success, successfulResponses, conn.IPTranslation, dnsKey)
 		require.Equal(c, uint32(failure), failedResponses)
 		require.Equal(c, uint32(timeout), timeouts, "expected %d timeouts but got %d", timeout, timeouts)
 	}, 10*time.Second, 100*time.Millisecond, "Failed to get dns response or unexpected response")
