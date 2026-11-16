@@ -1,0 +1,6 @@
+---
+enhancements:
+  - |
+    Add the ``datadog.runtime_security.security_profile_v2.profiles`` metric, a gauge of 1 per security profile held by the Agent. Summing it gives the number of profiles.
+  - |
+    The ``datadog.runtime_security.security_profile_v2`` metrics for profiles now carry a ``short_image`` tag, the image name without its registry. The ``profile_image_tag`` tag is removed from them, since it was always ``*`` for security profile v2.
