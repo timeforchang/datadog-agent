@@ -6,7 +6,10 @@ go_library(
     srcs = [
         "agenttelemetry.go",
         "config.go",
+        "errortracking_owners_gen.go",
+        "errortracking_owners.go",
         "errortracking_sender.go",
+        "errortracking_team.go",
         "logs_payload.go",
         "remoteflag.go",
         "runner.go",
@@ -48,10 +51,13 @@ dd_agent_go_test(
     name = "impl_test",
     srcs = [
         "agenttelemetry_test.go",
+        "errortracking_owners_test.go",
         "errortracking_sender_test.go",
+        "errortracking_team_test.go",
         "phonehome_test.go",
         "utils_test.go",
     ],
+    data = glob(["testdata/**"]),
     embed = [":impl"],
     deps = [
         "//comp/core/log/def",
@@ -67,6 +73,7 @@ dd_agent_go_test(
         "//pkg/util/fxutil",
         "//pkg/util/jsonquery",
         "//pkg/util/log/errortracking",
+        "//pkg/version",
         "@com_github_datadog_zstd//:zstd",
         "@com_github_prometheus_client_golang//prometheus",
         "@com_github_prometheus_client_model//go",
