@@ -638,6 +638,39 @@ func TestFromDDConfigDomainAllowlist(t *testing.T) {
 		assert.False(t, cfg.IsDomainAllowed(""))
 	})
 
+	t.Run("read from datadog.yaml", func(t *testing.T) {
+		mockConfig := configmock.NewFromYAML(t, `
+private_action_runner:
+  domain_allowlist:
+    - jenkins.example.com
+    - "*.ci.example.com"
+`)
+		cfg, err := FromDDConfig(mockConfig, nil)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"jenkins.example.com", "*.ci.example.com"}, cfg.DomainAllowlist)
+		assert.True(t, cfg.IsDomainAllowed("build.ci.example.com"))
+		assert.False(t, cfg.IsDomainAllowed("127.0.0.1"))
+	})
+
+	t.Run("empty list in datadog.yaml allows no domain", func(t *testing.T) {
+		mockConfig := configmock.NewFromYAML(t, `
+private_action_runner:
+  domain_allowlist: []
+`)
+		cfg, err := FromDDConfig(mockConfig, nil)
+		require.NoError(t, err)
+		assert.NotNil(t, cfg.DomainAllowlist)
+		assert.False(t, cfg.IsDomainAllowed("jenkins.example.com"))
+	})
+
+	t.Run("read from comma-separated env var", func(t *testing.T) {
+		t.Setenv("DD_PRIVATE_ACTION_RUNNER_DOMAIN_ALLOWLIST", "jenkins.example.com, ci.example.com")
+		mockConfig := configmock.New(t)
+		cfg, err := FromDDConfig(mockConfig, nil)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"jenkins.example.com", "ci.example.com"}, cfg.DomainAllowlist)
+	})
+
 	t.Run("http_allowlist does not set it", func(t *testing.T) {
 		mockConfig := configmock.New(t)
 		mockConfig.SetInTest(par.HTTPAllowlist, []string{"api.example.com"})
