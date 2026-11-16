@@ -27,6 +27,8 @@ const (
 	GpuNvidiaDRA ResourceGPU = "gpu.nvidia.com"
 	// GpuAMD is the resource name for an AMD GPU
 	GpuAMD ResourceGPU = "amd.com/gpu"
+	// GpuAMDDRA is the driver name for AMD GPUs allocated through Kubernetes Dynamic Resource Allocation
+	GpuAMDDRA ResourceGPU = "gpu.amd.com"
 	// GpuIntelXe is the resource name for an Intel Xe GPU
 	GpuIntelXe ResourceGPU = "gpu.intel.com/xe"
 	// GpuInteli915 is the resource name for an Intel i915 GPU
@@ -40,6 +42,7 @@ var longToShortGPUName = map[ResourceGPU]string{
 	GpuNvidiaGeneric: "nvidia",
 	GpuNvidiaDRA:     "nvidia",
 	GpuAMD:           "amd",
+	GpuAMDDRA:        "amd",
 	GpuIntelXe:       "intel",
 	GpuInteli915:     "intel",
 }
